@@ -74,12 +74,28 @@ class BaseNFLPredictor:
         if self.calibrate and X_val is not None and y_val is not None:
             print(f"  Calibrating {self.name}...")
             X_val_scaled = self.scaler.transform(X_val)
-            self.calibrated_model = CalibratedClassifierCV(
-                self.model,
-                method='isotonic',
-                cv='prefit'
-            )
-            self.calibrated_model.fit(X_val_scaled, y_val)
+            try:
+                # Try newer sklearn API (cv='prefit')
+                self.calibrated_model = CalibratedClassifierCV(
+                    self.model,
+                    method='isotonic',
+                    cv='prefit'
+                )
+                self.calibrated_model.fit(X_val_scaled, y_val)
+            except (ValueError, TypeError):
+                # Fallback for older sklearn versions
+                print(f"  Note: Using cv=2 for calibration (sklearn compatibility)")
+                # Use small cv for faster calibration
+                self.calibrated_model = CalibratedClassifierCV(
+                    self.model,
+                    method='isotonic',
+                    cv=2
+                )
+                # Combine train and val for calibration
+                import numpy as np
+                X_combined = np.vstack([X_train_scaled, X_val_scaled])
+                y_combined = np.hstack([y_train, y_val])
+                self.calibrated_model.fit(X_combined, y_combined)
 
         self.is_trained = True
         print(f"{self.name} training complete")

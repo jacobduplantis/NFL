@@ -134,14 +134,27 @@ class EnhancedNFLModelTrainer:
 
         self.models = create_enhanced_models(calibrate=True)
 
+        # Train models and track failures
+        failed_models = []
         for name, model in self.models.items():
             print(f"\nTraining {name}...")
             try:
                 model.train(X_train, y_train, X_val, y_val)
             except Exception as e:
                 print(f"  Error training {name}: {e}")
-                # Remove failed model
-                del self.models[name]
+                print(f"  Skipping {name}...")
+                failed_models.append(name)
+
+        # Remove failed models after iteration
+        for name in failed_models:
+            del self.models[name]
+
+        if len(self.models) == 0:
+            print("\n⚠️  All models failed to train!")
+            return False
+
+        print(f"\n✓ Successfully trained {len(self.models)} models")
+        return True
 
     def evaluate_all_models(self, X_train, X_val, X_test, y_train, y_val, y_test):
         """
@@ -279,7 +292,10 @@ class EnhancedNFLModelTrainer:
         X_train, X_val, X_test, y_train, y_val, y_test = self.create_train_val_test_split()
 
         # Train models
-        self.train_all_models(X_train, y_train, X_val, y_val)
+        success = self.train_all_models(X_train, y_train, X_val, y_val)
+        if not success:
+            print("\nTraining failed. Please check errors above.")
+            return None, None
 
         # Evaluate models
         self.evaluate_all_models(X_train, X_val, X_test, y_train, y_val, y_test)
