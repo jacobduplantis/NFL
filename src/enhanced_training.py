@@ -205,9 +205,11 @@ class EnhancedNFLModelTrainer:
             # Feature importance (if available)
             if hasattr(model, 'get_feature_importance') and model.get_feature_importance() is not None:
                 importance_df = model.get_feature_importance(top_n=10)
-                print(f"\n  Top 10 Features:")
-                for idx, row in importance_df.iterrows():
-                    print(f"    {row['feature']:<30s}: {row['importance']:.4f}")
+                if importance_df is not None and len(importance_df) > 0:
+                    print(f"\n  Top 10 Features:")
+                    for idx, row in importance_df.iterrows():
+                        feature_name = str(row['feature']) if row['feature'] is not None else 'unknown'
+                        print(f"    {feature_name:<30s}: {row['importance']:.4f}")
 
     def select_best_model(self):
         """Select best model based on test accuracy"""
