@@ -296,8 +296,36 @@ class NFLFeatureEngineer:
 
         # Elo ratings
         if hasattr(self, 'elo_ratings'):
-            features['home_elo'] = self.elo_ratings.get((home_team, game_date, 'home'), 1500)
-            features['away_elo'] = self.elo_ratings.get((away_team, game_date, 'away'), 1500)
+            # Try exact date lookup first (for historical data)
+            home_elo_key = (home_team, game_date, 'home')
+            away_elo_key = (away_team, game_date, 'away')
+
+            if home_elo_key in self.elo_ratings and away_elo_key in self.elo_ratings:
+                # Historical game - use exact Elo from that date
+                features['home_elo'] = self.elo_ratings[home_elo_key]
+                features['away_elo'] = self.elo_ratings[away_elo_key]
+            elif hasattr(self, 'final_elos'):
+                # Future prediction - use latest Elo ratings
+                # Try both full name and abbreviation
+                from team_names import get_team_abbreviation
+                home_abbrev = get_team_abbreviation(home_team)
+                away_abbrev = get_team_abbreviation(away_team)
+
+                features['home_elo'] = (
+                    self.final_elos.get(home_team) or
+                    self.final_elos.get(home_abbrev) or
+                    1500
+                )
+                features['away_elo'] = (
+                    self.final_elos.get(away_team) or
+                    self.final_elos.get(away_abbrev) or
+                    1500
+                )
+            else:
+                # Fallback to defaults
+                features['home_elo'] = 1500
+                features['away_elo'] = 1500
+
             features['elo_diff'] = features['home_elo'] - features['away_elo']
         else:
             features['home_elo'] = 1500

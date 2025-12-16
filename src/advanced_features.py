@@ -95,6 +95,8 @@ class AdvancedNFLFeatures:
                 team_elos[home_team] += adjusted_k * (home_actual - home_expected)
                 team_elos[away_team] += adjusted_k * (away_actual - (1 - home_expected))
 
+        # Store final MOV Elo ratings for future predictions
+        self.final_mov_elos = team_elos.copy()
         return mov_elo_ratings
 
     def get_weighted_recent_form(self, team, game_date, n_games=10):
@@ -350,8 +352,36 @@ class AdvancedNFLFeatures:
 
         # MOV-adjusted Elo ratings
         if mov_elo_ratings:
-            features['home_mov_elo'] = mov_elo_ratings.get((home_team, game_date, 'home'), 1500)
-            features['away_mov_elo'] = mov_elo_ratings.get((away_team, game_date, 'away'), 1500)
+            # Try exact date lookup first (for historical data)
+            home_mov_key = (home_team, game_date, 'home')
+            away_mov_key = (away_team, game_date, 'away')
+
+            if home_mov_key in mov_elo_ratings and away_mov_key in mov_elo_ratings:
+                # Historical game - use exact MOV Elo from that date
+                features['home_mov_elo'] = mov_elo_ratings[home_mov_key]
+                features['away_mov_elo'] = mov_elo_ratings[away_mov_key]
+            elif hasattr(self, 'final_mov_elos'):
+                # Future prediction - use latest MOV Elo ratings
+                # Try both full name and abbreviation
+                from team_names import get_team_abbreviation
+                home_abbrev = get_team_abbreviation(home_team)
+                away_abbrev = get_team_abbreviation(away_team)
+
+                features['home_mov_elo'] = (
+                    self.final_mov_elos.get(home_team) or
+                    self.final_mov_elos.get(home_abbrev) or
+                    1500
+                )
+                features['away_mov_elo'] = (
+                    self.final_mov_elos.get(away_team) or
+                    self.final_mov_elos.get(away_abbrev) or
+                    1500
+                )
+            else:
+                # Fallback to defaults
+                features['home_mov_elo'] = 1500
+                features['away_mov_elo'] = 1500
+
             features['mov_elo_diff'] = features['home_mov_elo'] - features['away_mov_elo']
 
         # Weighted recent form

@@ -160,6 +160,26 @@ TEAM_ALIASES = {
 
 ALL_VALID_TEAMS = NFL_TEAMS + HISTORICAL_TEAMS
 
+# Reverse mapping: Full name -> Abbreviation
+TEAM_TO_ABBREV = {
+    full_name: abbrev
+    for abbrev, full_name in TEAM_ALIASES.items()
+    if len(abbrev) <= 3  # Only keep standard 2-3 letter abbreviations
+}
+
+
+def get_team_abbreviation(full_name):
+    """
+    Convert full team name to abbreviation
+
+    Args:
+        full_name: Full team name (e.g., "Kansas City Chiefs")
+
+    Returns:
+        Abbreviation (e.g., "KC") or original name if not found
+    """
+    return TEAM_TO_ABBREV.get(full_name, full_name)
+
 
 def normalize_team_name(team_name):
     """

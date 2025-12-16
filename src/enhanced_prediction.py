@@ -71,7 +71,15 @@ class EnhancedNFLGamePredictor:
         )
         self.engineer.mov_elo_ratings = self.engineer.advanced_engineer.calculate_margin_of_victory_elo()
 
-        print(f"Ready to make predictions!")
+        # Debug: Show final Elo ratings for a few teams
+        if hasattr(self.engineer.base_engineer, 'final_elos'):
+            sample_teams = ['KC', 'BUF', 'SF', 'PHI', 'DAL', 'PIT', 'MIA']
+            print("\nFinal Elo Ratings (as of end of 2023 season):")
+            for team in sample_teams:
+                if team in self.engineer.base_engineer.final_elos:
+                    print(f"  {team}: {self.engineer.base_engineer.final_elos[team]:.0f}")
+
+        print(f"\nReady to make predictions!")
 
     def validate_teams(self, home_team, away_team):
         """
