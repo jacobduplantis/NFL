@@ -182,15 +182,42 @@ class EnhancedNFLGamePredictor:
                         game_date,
                         season
                     )
-                except:
-                    pass
+                except Exception as e:
+                    print(f"Warning: Could not fetch betting features: {e}")
+
+            # Ensure betting features have default values if missing
+            default_betting_features = {
+                'betting_spread': 0.0,
+                'betting_total': 47.5,  # NFL average
+                'betting_spread_abs': 0.0,
+                'betting_is_favorite': 0,
+                'betting_favorite_margin': 0.0
+            }
+            for key, default_value in default_betting_features.items():
+                if key not in betting_features:
+                    betting_features[key] = default_value
 
             # Combine features
             all_features = {**basic_features, **advanced_features, **betting_features}
             features_df = pd.DataFrame([all_features])
 
-            # Extract feature columns
-            X = features_df[self.model.feature_columns].fillna(0)
+            # Extract feature columns (handle None or invalid feature_columns)
+            if self.model.feature_columns is None or not self.model.feature_columns:
+                # Model doesn't have feature_columns - use all available features
+                exclude_cols = ['game_id', 'season', 'week', 'home_team', 'away_team', 'gameday', 'home_won', 'score_diff']
+                valid_feature_columns = [col for col in features_df.columns if col not in exclude_cols]
+            else:
+                # Filter out None values from feature_columns
+                valid_feature_columns = [col for col in self.model.feature_columns if col is not None and col in features_df.columns]
+
+                # If feature_columns has None or missing columns, fallback to all features
+                if len(valid_feature_columns) != len(self.model.feature_columns):
+                    print(f"Warning: Model expects {len(self.model.feature_columns)} features, but only {len(valid_feature_columns)} are valid")
+                    # Use all available features that aren't metadata
+                    exclude_cols = ['game_id', 'season', 'week', 'home_team', 'away_team', 'gameday', 'home_won', 'score_diff']
+                    valid_feature_columns = [col for col in features_df.columns if col not in exclude_cols]
+
+            X = features_df[valid_feature_columns].fillna(0)
 
             # Make prediction
             prediction = self.model.predict(X)[0]
@@ -226,8 +253,11 @@ class EnhancedNFLGamePredictor:
             return result
 
         except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
             return {
-                'error': f"Prediction error: {str(e)}",
+                'error': f"Prediction error: {str(e) if str(e) else type(e).__name__}",
+                'error_details': error_details,
                 'home_team': norm_home,
                 'away_team': norm_away
             }
@@ -265,6 +295,8 @@ class EnhancedNFLGamePredictor:
             print(f"\n{result['error']}")
             if 'suggestions' in result:
                 print(f"\n{result['suggestions']}")
+            if 'error_details' in result:
+                print(f"\nFull traceback:\n{result['error_details']}")
             print("=" * 70)
             return
 

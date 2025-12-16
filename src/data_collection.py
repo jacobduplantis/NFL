@@ -37,12 +37,39 @@ class NFLDataCollector:
         """Fetch historical game results"""
         print(f"Fetching game data from {self.start_year} to {self.end_year}...")
 
-        if nfl is None:
-            raise ImportError("nfl_data_py is required. Install with: pip install nfl-data-py")
+        # Try nflverse raw GitHub repository directly (more reliable)
+        try:
+            import urllib.request
+            print("  Fetching from nflverse repository...")
 
-        # Get schedule data with results
-        years = list(range(self.start_year, self.end_year + 1))
-        schedules = nfl.import_schedules(years)
+            # Use the raw data repository URL
+            url = "https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv"
+
+            with urllib.request.urlopen(url, timeout=60) as response:
+                schedules = pd.read_csv(response)
+
+            # Filter to requested years
+            schedules = schedules[
+                (schedules['season'] >= self.start_year) &
+                (schedules['season'] <= self.end_year)
+            ]
+
+            print(f"  Successfully fetched {len(schedules)} games from nflverse")
+
+        except Exception as e:
+            print(f"  nflverse fetch failed: {e}")
+            print("  Trying alternative nfl-data-py method...")
+
+            if nfl is None:
+                raise ImportError("nfl_data_py is required. Install with: pip install nfl-data-py")
+
+            # Fallback to nfl-data-py
+            try:
+                years = list(range(self.start_year, self.end_year + 1))
+                schedules = nfl.import_schedules(years)
+            except Exception as e2:
+                print(f"  nfl-data-py also failed: {e2}")
+                raise RuntimeError("All data sources failed. Please check internet connection or try again later.")
 
         # Filter to regular season and playoffs, exclude games not yet played
         schedules = schedules[schedules['game_type'].isin(['REG', 'WC', 'DIV', 'CON', 'SB'])]

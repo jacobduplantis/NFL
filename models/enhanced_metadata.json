@@ -1,0 +1,48 @@
+{
+  "best_model": "enhanced_neural_network",
+  "timestamp": "20251216_025156",
+  "results": {
+    "enhanced_random_forest": {
+      "train_accuracy": 0.9331395348837209,
+      "val_accuracy": 0.8726287262872628,
+      "test_accuracy": 0.6260162601626016,
+      "test_brier": 0.22582594438819234,
+      "test_log_loss": 0.6414565063206071
+    },
+    "enhanced_gradient_boosting": {
+      "train_accuracy": 0.9424418604651162,
+      "val_accuracy": 0.9728997289972899,
+      "test_accuracy": 0.5962059620596206,
+      "test_brier": 0.2319690358258695,
+      "test_log_loss": 0.6551158633212063
+    },
+    "enhanced_neural_network": {
+      "train_accuracy": 0.6616279069767442,
+      "val_accuracy": 0.6205962059620597,
+      "test_accuracy": 0.6368563685636857,
+      "test_brier": 0.22639133196077085,
+      "test_log_loss": 0.6438812010377145
+    },
+    "xgboost": {
+      "train_accuracy": 0.9226744186046512,
+      "val_accuracy": 0.9214092140921409,
+      "test_accuracy": 0.6016260162601627,
+      "test_brier": 0.23278309353037607,
+      "test_log_loss": 0.6605619304227754
+    },
+    "lightgbm": {
+      "train_accuracy": 0.9284883720930233,
+      "val_accuracy": 0.8373983739837398,
+      "test_accuracy": 0.5907859078590786,
+      "test_brier": 0.23429120673788784,
+      "test_log_loss": 0.6623017087443436
+    },
+    "super_ensemble": {
+      "train_accuracy": 0.9959302325581395,
+      "val_accuracy": 0.5989159891598916,
+      "test_accuracy": 0.6070460704607046,
+      "test_brier": 0.2393540652331194,
+      "test_log_loss": 0.6773365473968068
+    }
+  }
+}

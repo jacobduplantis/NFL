@@ -6,6 +6,7 @@ Runs the complete enhanced NFL prediction pipeline with all advanced features
 
 import sys
 import os
+import argparse
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
@@ -17,6 +18,10 @@ from enhanced_training import EnhancedNFLModelTrainer
 
 def main():
     """Run the complete enhanced pipeline"""
+    parser = argparse.ArgumentParser(description='Run enhanced NFL prediction pipeline')
+    parser.add_argument('--yes', '-y', action='store_true', help='Skip confirmation prompt')
+    args = parser.parse_args()
+
     print("\n" + "=" * 70)
     print("  ENHANCED NFL GAME PREDICTION MODEL - FULL PIPELINE")
     print("=" * 70)
@@ -34,10 +39,11 @@ def main():
     print("\nExpected improvement: 2-4% higher accuracy than basic model")
     print("\n" + "=" * 70)
 
-    response = input("\nContinue with enhanced pipeline? (y/n): ")
-    if response.lower() != 'y':
-        print("Pipeline cancelled.")
-        return
+    if not args.yes:
+        response = input("\nContinue with enhanced pipeline? (y/n): ")
+        if response.lower() != 'y':
+            print("Pipeline cancelled.")
+            return
 
     # Step 1: Data Collection
     print("\n\nSTEP 1: DATA COLLECTION")
