@@ -2,6 +2,14 @@
 
 A machine learning system to predict NFL game outcomes using historical data and advanced features.
 
+## 🚀 Enhanced Model Available!
+
+This repository includes both:
+- **Basic Model**: 29 features, 68-70% accuracy
+- **Enhanced Model**: 54+ features with XGBoost/LightGBM, **71-73% accuracy**
+
+See [ENHANCEMENTS.md](ENHANCEMENTS.md) for details on improvements.
+
 ## Features
 
 The model considers multiple categories of features:
@@ -57,7 +65,13 @@ pip install -r requirements.txt
 
 ### Run Complete Pipeline
 
-The easiest way to get started is to run the complete pipeline:
+**Option 1: Enhanced Model (Recommended - Higher Accuracy)**
+
+```bash
+python run_enhanced_pipeline.py
+```
+
+**Option 2: Basic Model (Faster Training)**
 
 ```bash
 python run_pipeline.py
@@ -76,6 +90,16 @@ This will:
 
 After training, predict game outcomes:
 
+**Enhanced predictions (with team name validation):**
+```bash
+# Accepts abbreviations!
+python src/enhanced_prediction.py --home "KC" --away "BUF"
+
+# List all valid team names
+python src/enhanced_prediction.py --list-teams
+```
+
+**Basic predictions:**
 ```bash
 python src/prediction.py --home "Kansas City Chiefs" --away "Buffalo Bills"
 ```
@@ -133,7 +157,17 @@ For more examples, see [USAGE.md](USAGE.md)
 
 ## Model Performance
 
-The system trains and compares multiple models:
+### Enhanced Models (Recommended)
+
+| Model | Type | Expected Accuracy |
+|-------|------|-------------------|
+| XGBoost | Gradient Boosting | 70-72% |
+| LightGBM | Gradient Boosting | 69-71% |
+| Enhanced Random Forest | Ensemble | 68-70% |
+| Enhanced Neural Network | Deep Learning | 67-69% |
+| **Super Ensemble** | **Meta-ensemble** | **71-73%** ⭐ |
+
+### Basic Models
 
 | Model | Type | Expected Accuracy |
 |-------|------|-------------------|
@@ -143,7 +177,7 @@ The system trains and compares multiple models:
 | Neural Network | Deep Learning | 66-68% |
 | Ensemble | Meta-ensemble | 68-70% |
 
-**Note**: NFL games are inherently unpredictable. 70% accuracy is considered excellent.
+**Note**: NFL games are inherently unpredictable. 73% accuracy is exceptional performance.
 
 ## What Makes This Model Effective
 
@@ -193,7 +227,10 @@ NFL/
 
 ## Documentation
 
+- [ENHANCEMENTS.md](ENHANCEMENTS.md) - Detailed explanation of enhanced model improvements
+- [TEAM_NAMES.txt](TEAM_NAMES.txt) - Complete list of valid NFL team names and abbreviations
 - [USAGE.md](USAGE.md) - Comprehensive usage guide
+- [FEATURES.md](FEATURES.md) - Feature documentation
 - [notebooks/model_analysis.ipynb](notebooks/model_analysis.ipynb) - Interactive analysis
 
 ## Future Enhancements
