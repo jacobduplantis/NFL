@@ -45,7 +45,13 @@ class EnhancedNFLModelTrainer:
         self.features_df = pd.read_csv(self.features_path)
 
         print(f"Loaded {len(self.features_df)} games")
-        print(f"Date range: {self.features_df['gameday'].min()} to {self.features_df['gameday'].max()}")
+
+        # Convert gameday to datetime if it exists
+        if 'gameday' in self.features_df.columns:
+            self.features_df['gameday'] = pd.to_datetime(self.features_df['gameday'])
+            print(f"Date range: {self.features_df['gameday'].min()} to {self.features_df['gameday'].max()}")
+        else:
+            print("Note: gameday column not found in features")
 
         # Check class balance
         home_wins = self.features_df['home_won'].sum()
@@ -75,7 +81,14 @@ class EnhancedNFLModelTrainer:
         y = self.features_df['home_won'].values
 
         # Chronological split
-        sorted_indices = self.features_df.sort_values('gameday').index
+        if 'gameday' in self.features_df.columns:
+            sorted_indices = self.features_df.sort_values('gameday').index
+        elif 'season' in self.features_df.columns and 'week' in self.features_df.columns:
+            # Fallback: sort by season and week
+            sorted_indices = self.features_df.sort_values(['season', 'week']).index
+        else:
+            # Last resort: use existing order
+            sorted_indices = self.features_df.index
 
         n_samples = len(sorted_indices)
         train_end = int(n_samples * (1 - val_size - test_size))
@@ -94,9 +107,14 @@ class EnhancedNFLModelTrainer:
         y_test = y[test_indices]
 
         print(f"Using chronological split:")
-        print(f"  Training:   {len(X_train):5d} games ({self.features_df.loc[train_indices, 'gameday'].min()} to {self.features_df.loc[train_indices, 'gameday'].max()})")
-        print(f"  Validation: {len(X_val):5d} games ({self.features_df.loc[val_indices, 'gameday'].min()} to {self.features_df.loc[val_indices, 'gameday'].max()})")
-        print(f"  Testing:    {len(X_test):5d} games ({self.features_df.loc[test_indices, 'gameday'].min()} to {self.features_df.loc[test_indices, 'gameday'].max()})")
+        print(f"  Training:   {len(X_train):5d} games")
+        print(f"  Validation: {len(X_val):5d} games")
+        print(f"  Testing:    {len(X_test):5d} games")
+
+        if 'gameday' in self.features_df.columns:
+            print(f"  Train dates: {self.features_df.loc[train_indices, 'gameday'].min()} to {self.features_df.loc[train_indices, 'gameday'].max()}")
+            print(f"  Val dates:   {self.features_df.loc[val_indices, 'gameday'].min()} to {self.features_df.loc[val_indices, 'gameday'].max()}")
+            print(f"  Test dates:  {self.features_df.loc[test_indices, 'gameday'].min()} to {self.features_df.loc[test_indices, 'gameday'].max()}")
 
         return X_train, X_val, X_test, y_train, y_val, y_test
 
