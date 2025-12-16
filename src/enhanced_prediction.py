@@ -14,6 +14,7 @@ warnings.filterwarnings('ignore')
 
 from enhanced_feature_engineering import EnhancedNFLFeatureEngineer
 from team_names import normalize_team_name, validate_team_name, get_all_team_names
+from advanced_features import AdvancedNFLFeatures
 
 
 class EnhancedNFLGamePredictor:
@@ -163,14 +164,29 @@ class EnhancedNFLGamePredictor:
             # Generate basic features
             basic_features = self.engineer.base_engineer.create_features_for_game(game_row)
 
-            # Generate advanced features
-            advanced_features = self.engineer.advanced_engineer.create_advanced_features(
-                game_row,
-                mov_elo_ratings=self.engineer.mov_elo_ratings
-            )
+            # Generate advanced features (need to check if advanced_engineer exists)
+            advanced_features = {}
+            if self.engineer.advanced_engineer is not None:
+                advanced_features = self.engineer.advanced_engineer.create_advanced_features(
+                    game_row,
+                    mov_elo_ratings=self.engineer.mov_elo_ratings
+                )
+
+            # Try to get betting features if available
+            betting_features = {}
+            if hasattr(self.engineer, 'betting_lines') and self.engineer.betting_lines is not None:
+                try:
+                    betting_features = self.engineer.betting_lines.get_betting_features(
+                        norm_home,
+                        norm_away,
+                        game_date,
+                        season
+                    )
+                except:
+                    pass
 
             # Combine features
-            all_features = {**basic_features, **advanced_features}
+            all_features = {**basic_features, **advanced_features, **betting_features}
             features_df = pd.DataFrame([all_features])
 
             # Extract feature columns
