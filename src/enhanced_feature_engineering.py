@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 from feature_engineering import NFLFeatureEngineer
 from advanced_features import AdvancedNFLFeatures
+from betting_lines import NFLBettingLines
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -33,6 +34,7 @@ class EnhancedNFLFeatureEngineer:
         # Will be initialized after Elo calculation
         self.advanced_engineer = None
         self.mov_elo_ratings = None
+        self.betting_lines = None
 
     def create_complete_feature_dataset(self):
         """
@@ -57,6 +59,17 @@ class EnhancedNFLFeatureEngineer:
         print("\nStep 3: Calculating margin-of-victory Elo ratings...")
         self.mov_elo_ratings = self.advanced_engineer.calculate_margin_of_victory_elo()
 
+        # Step 3.5: Load betting lines data (optional but recommended)
+        print("\nStep 3.5: Loading betting lines and market data...")
+        try:
+            self.betting_lines = NFLBettingLines()
+            betting_data = self.betting_lines.process_betting_data()
+            print("✓ Betting lines data loaded successfully")
+        except Exception as e:
+            print(f"⚠️  Betting lines data not available: {e}")
+            print("  Continuing without betting features...")
+            self.betting_lines = None
+
         # Step 4: Generate all features for each game
         print("\nStep 4: Generating comprehensive features...")
         features_list = []
@@ -75,8 +88,21 @@ class EnhancedNFLFeatureEngineer:
                 mov_elo_ratings=self.mov_elo_ratings
             )
 
+            # Get betting line features (if available)
+            betting_features = {}
+            if self.betting_lines:
+                try:
+                    betting_features = self.betting_lines.get_betting_features(
+                        row['home_team'],
+                        row['away_team'],
+                        row['gameday'],
+                        row['season']
+                    )
+                except:
+                    betting_features = self.betting_lines._default_betting_features()
+
             # Combine all features
-            all_features = {**basic_features, **advanced_features}
+            all_features = {**basic_features, **advanced_features, **betting_features}
 
             features_list.append(all_features)
 
@@ -89,11 +115,17 @@ class EnhancedNFLFeatureEngineer:
         exclude_cols = ['game_id', 'season', 'week', 'home_team', 'away_team', 'gameday', 'home_won', 'score_diff']
         feature_cols = [col for col in features_df.columns if col not in exclude_cols]
 
+        # Count feature types
+        basic_count = 29
+        betting_count = len([col for col in feature_cols if col.startswith('betting_') or col.startswith('weather_')])
+        advanced_count = len(feature_cols) - basic_count - betting_count
+
         print(f"\nFeature engineering complete!")
         print(f"  Total games: {len(features_df)}")
         print(f"  Total features: {len(feature_cols)}")
-        print(f"  Basic features: 29")
-        print(f"  Advanced features: {len(feature_cols) - 29}")
+        print(f"  Basic features: {basic_count}")
+        print(f"  Advanced features: {advanced_count}")
+        print(f"  Betting/Market features: {betting_count}")
         print("=" * 70)
 
         return features_df
